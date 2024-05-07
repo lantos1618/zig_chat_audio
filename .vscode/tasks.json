@@ -5,6 +5,11 @@
             "label": "zigBuild",
             "type": "shell",
             "command": "zig build",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

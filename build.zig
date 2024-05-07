@@ -16,11 +16,13 @@ pub fn build(b: *std.build.Builder) void {
     // custom linkers
     exe.addIncludeDir("src");
     exe.linkLibC();
-    const miniaudiolibFlags = [_][]const u8{"-lm", "-ldl", "-lpthread"};
-    exe.addCSourceFile("src/miniaudio.c", &miniaudiolibFlags);
+
+    const miniaudiolibFlags = [_][]const u8{ "-lm", "-ldl", "-lpthread" };
+    exe.addCSourceFile("src/miniaudio/miniaudio.c", &miniaudiolibFlags);
 
     exe.setTarget(target);
-    exe.setBuildMode(mode);
+    // exe.setBuildMode(std.builtin.Mode.ReleaseSmall);
+    exe.setBuildMode(std.builtin.Mode.Debug);
     exe.install();
 
     const run_cmd = exe.run();
