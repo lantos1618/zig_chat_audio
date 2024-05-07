@@ -10,8 +10,10 @@ const ma = @cImport({
 const MiniaudioError = error{ DeviceStartError, DeviceInitializationError, EncoderInitializationError, FileInitializationError };
 
 fn dataCallback(pDevice: [*c]ma.ma_device, pOutput: ?*anyopaque, pInput: ?*const anyopaque, frameCount: ma.ma_uint32) callconv(.C) void {
-    var pEncoder: [*c]ma.ma_encoder = @ptrCast([*c]ma.ma_encoder, @alignCast(@import("std").meta.alignment(ma.ma_encoder), pDevice.*.pUserData));
-    _ = ma.ma_encoder_write_pcm_frames(pEncoder, pInput, @bitCast(ma.ma_uint64, @as(c_ulonglong, frameCount)), null);
+    const Alignment_Type = @import("std").meta.alignment(ma.ma_encoder);
+    const value = @as(Alignment_Type, pDevice.*.pUserData);
+    const pEncoder: [*c]ma.ma_encoder = @ptrCast(value);
+    _ = ma.ma_encoder_write_pcm_frames(pEncoder, pInput, frameCount, null);
     _ = pOutput;
 }
 
@@ -30,12 +32,14 @@ pub fn run() anyerror!void {
         return MiniaudioError.FileInitializationError;
     }
 
-    deviceConfig = ma.ma_device_config_init(@bitCast(c_uint, ma.ma_device_type_capture));
+    const device_type_capture: c_uint = ma.ma_device_type_capture;
+    const p_user_data: ?*anyopaque = @ptrCast(&encoder);
+    deviceConfig = ma.ma_device_config_init(device_type_capture);
     deviceConfig.capture.format = encoder.config.format;
     deviceConfig.capture.channels = encoder.config.channels;
     deviceConfig.sampleRate = encoder.config.sampleRate;
     deviceConfig.dataCallback = dataCallback;
-    deviceConfig.pUserData = @ptrCast(?*anyopaque, &encoder);
+    deviceConfig.pUserData = p_user_data;
 
     if (ma.ma_device_init(null, &deviceConfig, &device) != ma.MA_SUCCESS) {
         return MiniaudioError.DeviceInitializationError;

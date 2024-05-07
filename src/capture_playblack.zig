@@ -10,7 +10,8 @@ const ma = @cImport({
 const MiniaudioError = error{ DeviceStartError, DeviceInitializationError, EncoderInitializationError, FileInitializationError };
 
 fn dataCallback(pDevice: [*c]ma.ma_device, pOutput: ?*anyopaque, pInput: ?*const anyopaque, frameCount: ma.ma_uint32) callconv(.C) void {
-
+    _ = pDevice;
+    _ = frameCount;
     // _ = ma.MA_ASSERT(pDevice.*.capture.format == pDevice.*.playback.format);
     // _ = ma.MA_ASSERT(pDevice.*.capture.channels == pDevice.*.playback.channels);
     // _ = ma.MA_COPY_MEMORY(pOutput, pInput, frameCount *% ma.ma_get_bytes_per_frame(pDevice.*.capture.format, pDevice.*.capture.channels));
@@ -18,7 +19,10 @@ fn dataCallback(pDevice: [*c]ma.ma_device, pOutput: ?*anyopaque, pInput: ?*const
     // try testing.expect(pDevice.*.capture.format == pDevice.*.playback.format) catch { unreachable;};
     // try testing.expect(pDevice.*.capture.channels == pDevice.*.playback.channels) catch {unreachable;};
 
-    @memcpy(@ptrCast([*]u8, pOutput), @ptrCast([*]const u8, pInput), frameCount * ma.ma_get_bytes_per_frame(pDevice.*.capture.format, pDevice.*.capture.channels));
+    // @memcpy(@ptrCast([*]u8, pOutput), @ptrCast([*]const u8, pInput), frameCount * ma.ma_get_bytes_per_frame(pDevice.*.capture.format, pDevice.*.capture.channels));
+    const dest: []u8 = @ptrCast(pOutput);
+    const source: []u8 = @ptrCast(pInput);
+    @memcpy(dest, source);
 }
 
 pub fn run() anyerror!void {
@@ -26,14 +30,19 @@ pub fn run() anyerror!void {
     var device: ma.ma_device = undefined;
     var stdin = std.io.getStdIn().reader();
     var text_buffer: [10]u8 = undefined;
+    const duplex_type: c_uint = @bitCast(ma.ma_device_type_duplex);
+    const capture_format: c_uint = @bitCast(ma.ma_format_s16);
 
-    deviceConfig = ma.ma_device_config_init(@bitCast(c_uint, ma.ma_device_type_duplex));
+    const shareMode: c_uint = @bitCast(ma.ma_share_mode_shared);
+    const playback_format: c_uint = @bitCast(ma.ma_format_s16);
+
+    deviceConfig = ma.ma_device_config_init(duplex_type);
     deviceConfig.capture.pDeviceID = null;
-    deviceConfig.capture.format = @bitCast(c_uint, ma.ma_format_s16);
+    deviceConfig.capture.format = capture_format;
     deviceConfig.capture.channels = 2;
-    deviceConfig.capture.shareMode = @bitCast(c_uint, ma.ma_share_mode_shared);
+    deviceConfig.capture.shareMode = shareMode;
     deviceConfig.playback.pDeviceID = null;
-    deviceConfig.playback.format = @bitCast(c_uint, ma.ma_format_s16);
+    deviceConfig.playback.format = playback_format;
     deviceConfig.playback.channels = 2;
     deviceConfig.dataCallback = dataCallback;
 

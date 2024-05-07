@@ -36,6 +36,20 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // custom linkers
+    exe.addIncludePath(b.path("src"));
+
+    exe.linkLibC();
+
+    const miniaudiolibFlags = &.{ "-lm", "-ldl", "-lpthread" };
+    // exe.addCSourceFile("src/miniaudio/miniaudio.c", &miniaudiolibFlags);
+    const miniaudiolibFiles = &.{"src/miniaudio/miniaudio.c"};
+    const miniaudio = std.Build.Module.AddCSourceFilesOptions{
+        .files = miniaudiolibFiles,
+        .flags = miniaudiolibFlags,
+    };
+    exe.addCSourceFiles(miniaudio);
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
