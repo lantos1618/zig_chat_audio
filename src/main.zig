@@ -2,7 +2,7 @@ const std = @import("std");
 const crypto = std.crypto;
 const testing = std.testing;
 const cp = @import("capture_playblack.zig");
-const cf = @import("capture_file.zig");
+// const cf = @import("capture_file.zig");
 // const chat = @import("chat.zig");
 
 const ma = @cImport({
@@ -11,8 +11,8 @@ const ma = @cImport({
 });
 
 pub fn main() anyerror!void {
-    //     try cp.run();
-    //     try cf.run();
+    try cp.run();
+    // try cf.run();
     // try chat.run();
 
     // var room_alloc = std.heap.ArenaAllocator.init(std.heap.page_allocator);
